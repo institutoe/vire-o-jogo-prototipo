@@ -1,1 +1,1254 @@
-<html><body>UPDATED_TEST</body></html><html><body>test</body></html>
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Vire o Jogo â ProtÃ³tipo</title>
+<style>
+* { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+:root {
+  --green:#1A7A3C; --gl:#25A352; --dark:#0D2B1A;
+  --gold:#C8991A; --gol:#F0C040; --red:#E53935;
+  --bg:#F0F7F3; --card:#FFF; --text:#1A1A1A; --sub:#666;
+}
+body {
+  font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
+  background:radial-gradient(ellipse at center,#1a1a3e 0%,#0a0a1a 100%);
+  display:flex; flex-direction:column; align-items:center;
+  min-height:100vh; padding:16px; gap:14px;
+}
+.device {
+  width:375px; height:780px; background:var(--bg); border-radius:40px;
+  overflow:hidden; position:relative;
+  box-shadow:0 40px 80px rgba(0,0,0,.7),inset 0 0 0 2px rgba(255,255,255,.1),0 0 60px rgba(26,122,60,.2);
+}
+.notch { position:absolute; top:0; left:50%; transform:translateX(-50%); width:120px; height:28px; background:var(--dark); border-radius:0 0 20px 20px; z-index:100; }
+.screen { display:none; width:100%; height:100%; overflow-y:auto; overflow-x:hidden; }
+.screen.active { display:flex; flex-direction:column; }
+.mute-btn { position:absolute; top:32px; right:16px; background:rgba(255,255,255,.15); border:none; border-radius:50%; width:32px; height:32px; cursor:pointer; z-index:200; font-size:16px; color:#fff; display:flex; align-items:center; justify-content:center; }
+
+/* ââ SPLASH ââ */
+#splash { background:linear-gradient(160deg,#0D2B1A 0%,#1A7A3C 55%,#25A352 100%); align-items:center; justify-content:center; gap:0; }
+.s-tiger { font-size:96px; animation:float 3s ease-in-out infinite; margin-bottom:4px; }
+@keyframes float { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-12px)} }
+.s-logo { font-size:44px; font-weight:900; color:#fff; letter-spacing:-1px; text-align:center; }
+.s-tag { font-size:13px; color:var(--gol); font-style:italic; margin:6px 0 36px; text-align:center; }
+.s-btn { background:var(--gold); color:#fff; border:none; padding:16px 48px; border-radius:50px; font-size:17px; font-weight:700; cursor:pointer; box-shadow:0 8px 24px rgba(200,153,26,.6); transition:transform .1s; margin-bottom:10px; }
+.s-btn:active { transform:scale(.97); }
+.s-free { font-size:12px; color:rgba(255,255,255,.6); margin-bottom:24px; }
+.s-anti { background:rgba(0,0,0,.25); border-radius:14px; padding:12px 16px; margin:0 20px; text-align:center; }
+.s-anti span { font-size:11px; color:rgba(255,255,255,.7); line-height:1.6; }
+.s-anti b { color:var(--gol); }
+
+/* ââ ONBOARD ââ */
+#onboard { background:linear-gradient(180deg,#0D2B1A 0%,#1A4A2A 100%); padding:44px 24px 24px; align-items:center; justify-content:space-between; }
+.ob-steps { display:flex; gap:6px; margin-bottom:8px; }
+.ob-dot { width:8px; height:8px; border-radius:50%; background:rgba(255,255,255,.2); transition:all .3s; }
+.ob-dot.done { background:var(--gl); }
+.ob-dot.active { background:var(--gold); width:22px; border-radius:4px; }
+.ob-icon { font-size:64px; animation:float 3s infinite; }
+.ob-q { font-size:22px; font-weight:800; color:#fff; text-align:center; line-height:1.3; margin-bottom:6px; }
+.ob-sub { font-size:13px; color:rgba(255,255,255,.6); text-align:center; margin-bottom:18px; }
+.ob-opts { width:100%; display:flex; flex-direction:column; gap:10px; }
+.ob-opt { background:rgba(255,255,255,.08); border:2px solid rgba(255,255,255,.12); border-radius:14px; padding:13px 16px; color:#fff; font-size:14px; font-weight:600; cursor:pointer; transition:all .2s; display:flex; align-items:center; gap:12px; }
+.ob-opt.sel { background:rgba(37,163,82,.35); border-color:var(--gl); }
+
+/* ââ PERFIL ââ */
+#perfil { background:linear-gradient(160deg,#0D2B1A 0%,#1A7A3C 100%); align-items:center; justify-content:center; padding:44px 24px 28px; gap:10px; text-align:center; }
+.p-badge { width:100px; height:100px; background:var(--gold); border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:52px; animation:pulse 2s infinite; }
+@keyframes pulse { 0%,100%{box-shadow:0 0 0 8px rgba(200,153,26,.3),0 0 0 16px rgba(200,153,26,.15)} 50%{box-shadow:0 0 0 14px rgba(200,153,26,.2),0 0 0 24px rgba(200,153,26,.08)} }
+.p-title { font-size:26px; font-weight:900; color:#fff; }
+.p-name { font-size:15px; color:var(--gol); }
+.p-plan { background:rgba(255,255,255,.08); border-radius:16px; padding:14px 18px; width:100%; }
+.p-phases { display:flex; gap:6px; margin-top:8px; flex-wrap:wrap; justify-content:center; }
+.p-phase { background:rgba(255,255,255,.08); border-radius:8px; padding:5px 9px; font-size:10px; color:rgba(255,255,255,.75); border-left:3px solid; }
+
+/* ââ HOME ââ */
+#home { background:var(--bg); padding:44px 0 80px; flex-direction:column; }
+.h-hdr { background:linear-gradient(135deg,var(--dark) 0%,var(--green) 100%); padding:18px 20px 26px; border-radius:0 0 24px 24px; margin-bottom:-12px; }
+.h-greet { font-size:13px; color:rgba(255,255,255,.7); }
+.h-name { font-size:20px; font-weight:800; color:#fff; }
+.xb-wrap { margin-top:10px; background:rgba(255,255,255,.15); border-radius:10px; height:8px; overflow:hidden; }
+.xb { height:100%; background:linear-gradient(90deg,var(--gold),var(--gol)); border-radius:10px; width:0; transition:width 1.2s cubic-bezier(.4,0,.2,1); }
+.xb-lbl { display:flex; justify-content:space-between; margin-top:4px; }
+.xb-lbl span { font-size:11px; color:rgba(255,255,255,.7); }
+.hbody { padding:18px 16px 0; }
+.stats { display:flex; gap:10px; margin-bottom:14px; }
+.sc { flex:1; background:var(--card); border-radius:16px; padding:12px; box-shadow:0 4px 14px rgba(0,0,0,.07); text-align:center; cursor:pointer; }
+.sc-icon { font-size:20px; }
+.sc-val { font-size:20px; font-weight:900; color:var(--text); line-height:1; margin-top:2px; }
+.sc-lbl { font-size:10px; color:var(--sub); }
+
+/* mini-map */
+.minimap { background:var(--card); border-radius:20px; padding:14px 16px; box-shadow:0 4px 14px rgba(0,0,0,.07); margin-bottom:14px; cursor:pointer; }
+.mm-title { font-size:12px; font-weight:700; color:var(--sub); text-transform:uppercase; letter-spacing:1px; margin-bottom:10px; display:flex; justify-content:space-between; }
+.mm-road { display:flex; align-items:center; justify-content:space-between; position:relative; padding:8px 0; }
+.mm-road::before { content:''; position:absolute; top:50%; left:18px; right:18px; height:4px; background:linear-gradient(90deg,var(--gl) 0%,var(--gl) 40%,#E0E0E0 40%); transform:translateY(-50%); z-index:0; border-radius:2px; }
+.mn { width:32px; height:32px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:14px; position:relative; z-index:1; box-shadow:0 2px 8px rgba(0,0,0,.15); }
+.mn.done { background:var(--gl); }
+.mn.active { background:var(--gold); animation:ng 2s infinite; }
+.mn.locked { background:#E0E0E0; }
+@keyframes ng { 0%,100%{box-shadow:0 0 0 4px rgba(200,153,26,.3)} 50%{box-shadow:0 0 0 8px rgba(200,153,26,.15)} }
+.mm-char { position:absolute; top:-16px; left:33%; font-size:22px; z-index:2; animation:wlk .6s ease-in-out infinite alternate; }
+@keyframes wlk { from{transform:translateY(0)} to{transform:translateY(-3px)} }
+
+/* missions */
+.mcard { background:var(--card); border-radius:20px; padding:14px; box-shadow:0 4px 14px rgba(0,0,0,.06); margin-bottom:14px; }
+.mhdr { display:flex; justify-content:space-between; align-items:center; margin-bottom:10px; }
+.mtitle { font-size:14px; font-weight:700; color:var(--text); }
+.stk { background:#FFF3E0; color:var(--gold); font-size:12px; font-weight:700; padding:3px 10px; border-radius:20px; }
+.mitem { display:flex; align-items:center; gap:10px; padding:9px 0; border-bottom:1px solid #F5F5F5; cursor:pointer; }
+.mitem:last-child { border-bottom:none; padding-bottom:0; }
+.mck { width:24px; height:24px; border-radius:50%; border:2px solid #E0E0E0; display:flex; align-items:center; justify-content:center; font-size:12px; flex-shrink:0; transition:all .3s; }
+.mck.done { background:var(--green); border-color:var(--green); color:#fff; }
+.mtxt { flex:1; font-size:13px; color:var(--text); }
+.mtxt.done { text-decoration:line-through; color:var(--sub); }
+.mbuf { font-size:11px; font-weight:700; color:#1565C0; background:#E3F2FD; padding:2px 8px; border-radius:10px; }
+
+/* ââ MAPA COMPLETO ââ */
+#mapa { background:linear-gradient(180deg,#070d20 0%,#0d2b1a 28%,#1a4a2a 58%,#1e6b30 78%,#25a352 100%); overflow-y:auto; padding:44px 0 80px; flex-direction:column; align-items:center; }
+.mapa-ttl { font-size:16px; font-weight:800; color:rgba(255,255,255,.9); text-align:center; letter-spacing:1px; padding:10px 0 2px; text-transform:uppercase; }
+.mapa-sub-lbl { font-size:11px; color:rgba(255,255,255,.5); text-align:center; margin-bottom:6px; }
+.gate { text-align:center; padding:10px 0; }
+.gate-ico { font-size:52px; animation:gg 2s ease-in-out infinite; }
+@keyframes gg { 0%,100%{filter:drop-shadow(0 0 8px rgba(200,153,26,.4))} 50%{filter:drop-shadow(0 0 22px rgba(200,153,26,.85))} }
+.gate-lbl { font-size:13px; font-weight:800; color:var(--gol); margin-top:2px; }
+.gate-sub { font-size:10px; color:rgba(255,255,255,.4); }
+
+/* map canvas */
+.mcanvas { width:340px; height:420px; position:relative; margin:0 auto; flex-shrink:0; }
+.msvg { position:absolute; top:0; left:0; width:100%; height:100%; overflow:visible; }
+.pnode { position:absolute; display:flex; flex-direction:column; align-items:center; gap:3px; cursor:pointer; transform:translate(-50%,-50%); }
+.pcirc { width:54px; height:54px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:26px; box-shadow:0 4px 16px rgba(0,0,0,.4); transition:transform .15s; }
+.pcirc:active { transform:scale(.93); }
+.plbl { font-size:10px; font-weight:700; color:#fff; text-align:center; line-height:1.3; text-shadow:0 1px 4px rgba(0,0,0,.8); max-width:78px; }
+.pstat { font-size:9px; padding:2px 7px; border-radius:10px; font-weight:700; }
+.ps-done { background:var(--gl); color:#fff; }
+.ps-active { background:var(--gold); color:var(--dark); animation:pb 1.5s infinite; }
+@keyframes pb { 0%,100%{opacity:1} 50%{opacity:.65} }
+.ps-lock { background:rgba(255,255,255,.12); color:rgba(255,255,255,.45); }
+.hero { position:absolute; font-size:38px; z-index:10; filter:drop-shadow(0 4px 8px rgba(0,0,0,.5)); animation:hf 2s ease-in-out infinite; transform:translate(-50%,-50%); }
+@keyframes hf { 0%,100%{transform:translate(-50%,-50%) translateY(0) scale(1)} 50%{transform:translate(-50%,-50%) translateY(-7px) scale(1.06)} }
+
+/* progress */
+.mprog { background:rgba(255,255,255,.08); border-radius:16px; padding:12px 16px; margin:8px 16px; width:calc(100% - 32px); }
+.mpr { display:flex; justify-content:space-between; align-items:center; margin-bottom:5px; }
+.mpl { font-size:12px; color:rgba(255,255,255,.7); font-weight:600; }
+.mpv { font-size:12px; color:var(--gol); font-weight:700; }
+.mpbw { background:rgba(255,255,255,.15); border-radius:6px; height:6px; overflow:hidden; }
+.mpb { height:100%; background:linear-gradient(90deg,var(--gold),var(--gol)); border-radius:6px; }
+.stars { display:flex; gap:4px; justify-content:center; margin:5px 0; }
+.star { font-size:20px; opacity:.18; transition:all .3s; }
+.star.lit { opacity:1; animation:sp .4s ease; }
+@keyframes sp { 0%{transform:scale(0)} 60%{transform:scale(1.4)} 100%{transform:scale(1)} }
+
+/* milestones */
+.mstones { padding:0 16px; width:100%; }
+.mstone { display:flex; align-items:center; gap:10px; padding:8px 0; border-bottom:1px solid rgba(255,255,255,.07); cursor:pointer; }
+.mstone:last-child { border-bottom:none; }
+.msi { font-size:20px; }
+.mst { flex:1; }
+.msn { font-size:12px; font-weight:700; color:#fff; }
+.msd { font-size:10px; color:rgba(255,255,255,.45); }
+.msbuf { font-size:11px; font-weight:700; color:var(--gol); }
+
+/* ââ CHECKIN ââ */
+#checkin { background:var(--bg); padding:44px 20px 80px; align-items:center; }
+.ci-hdr { text-align:center; margin-bottom:14px; width:100%; }
+.ci-greet { font-size:13px; color:var(--sub); }
+.ci-ttl { font-size:20px; font-weight:800; color:var(--text); line-height:1.2; margin-top:4px; }
+.ci-char { font-size:58px; margin:6px 0; animation:float 3s infinite; }
+.ciq { background:var(--card); border-radius:18px; padding:16px; width:100%; box-shadow:0 4px 14px rgba(0,0,0,.08); margin-bottom:10px; text-align:center; }
+.cqn { font-size:10px; color:var(--sub); font-weight:700; text-transform:uppercase; letter-spacing:1px; margin-bottom:4px; }
+.cqt { font-size:14px; font-weight:700; color:var(--text); line-height:1.4; margin-bottom:12px; }
+.cqb { display:flex; gap:8px; }
+.cbb { flex:1; padding:10px; border-radius:12px; border:2px solid; font-size:13px; font-weight:700; cursor:pointer; transition:all .2s; }
+.cbb.yes { background:#E8F5E9; border-color:var(--green); color:var(--green); }
+.cbb.no { background:#FFEBEE; border-color:var(--red); color:var(--red); }
+.cbb.sy { background:var(--green); color:#fff; }
+.cbb.sn { background:var(--red); color:#fff; }
+
+/* ââ CELEBRAÃÃO ââ */
+#celebracao { background:linear-gradient(160deg,#0D2B1A 0%,#1A7A3C 50%,#25A352 100%); align-items:center; justify-content:center; padding:44px 24px 80px; text-align:center; gap:10px; position:relative; overflow:hidden; }
+.confetti { position:absolute; width:100%; height:100%; pointer-events:none; top:0; left:0; }
+.cp { position:absolute; border-radius:2px; animation:cf linear infinite; }
+@keyframes cf { 0%{transform:translateY(-20px) rotate(0);opacity:1} 100%{transform:translateY(820px) rotate(720deg);opacity:0} }
+.ctl-trophy { font-size:80px; animation:bnc .6s ease-in-out infinite alternate; }
+@keyframes bnc { from{transform:scale(1)} to{transform:scale(1.1)} }
+.ctl-title { font-size:30px; font-weight:900; color:#fff; }
+.ctl-sub { font-size:14px; color:rgba(255,255,255,.85); line-height:1.5; }
+.ctl-badge { background:var(--gold); border-radius:16px; padding:14px 22px; width:100%; }
+.ctl-bl { font-size:10px; font-weight:700; color:rgba(0,0,0,.55); text-transform:uppercase; letter-spacing:1px; }
+.ctl-bn { font-size:20px; font-weight:900; color:var(--dark); margin-top:2px; }
+.ctl-coins { display:flex; align-items:center; gap:8px; background:rgba(255,255,255,.1); border-radius:30px; padding:10px 22px; }
+.ctl-coins span { font-size:15px; color:#fff; font-weight:700; }
+.ctl-coins b { color:var(--gol); font-size:22px; }
+
+/* ââ SHARED ââ */
+.btn-p { background:var(--green); color:#fff; border:none; padding:15px 32px; border-radius:50px; font-size:16px; font-weight:700; cursor:pointer; width:100%; box-shadow:0 8px 24px rgba(26,122,60,.35); transition:transform .1s; }
+.btn-p:active { transform:scale(.98); }
+.btn-g { background:var(--gold); color:#fff; border:none; padding:15px 32px; border-radius:50px; font-size:16px; font-weight:700; cursor:pointer; width:100%; box-shadow:0 8px 24px rgba(200,153,26,.35); transition:transform .1s; }
+.btn-g:active { transform:scale(.98); }
+
+.bnav { position:absolute; bottom:0; left:0; right:0; height:64px; background:#fff; display:flex; align-items:center; justify-content:space-around; border-top:1px solid #F0F0F0; z-index:10; border-radius:0 0 40px 40px; padding-bottom:6px; }
+.nitem { display:flex; flex-direction:column; align-items:center; gap:2px; cursor:pointer; opacity:.35; transition:opacity .2s; padding:6px 12px; }
+.nitem.active { opacity:1; }
+.nico { font-size:22px; }
+.nlbl { font-size:9px; font-weight:700; color:var(--green); }
+
+.toast { position:absolute; top:46px; left:14px; right:14px; background:var(--dark); color:#fff; border-radius:14px; padding:10px 14px; font-size:13px; font-weight:600; z-index:200; display:none; align-items:center; gap:10px; box-shadow:0 8px 24px rgba(0,0,0,.4); animation:sd .3s ease; }
+.toast.show { display:flex; }
+@keyframes sd { from{transform:translateY(-8px);opacity:0} to{transform:translateY(0);opacity:1} }
+.cburst { position:absolute; pointer-events:none; z-index:300; font-size:22px; animation:cbp .7s ease forwards; }
+@keyframes cbp { 0%{transform:translate(-50%,-50%) scale(0);opacity:1} 60%{transform:translate(-50%,-120%) scale(1.3);opacity:1} 100%{transform:translate(-50%,-200%) scale(.8);opacity:0} }
+
+/* ââ ESCUDO: CaÃ§a-Fortuna ââ */
+#escudo { background:linear-gradient(160deg,#1a0a2e 0%,#2d1b69 40%,#0d2b1a 100%); padding:44px 16px 80px; align-items:center; overflow-y:auto; gap:0; }
+.esd-ttl { font-size:20px; font-weight:900; color:#fff; text-align:center; margin-bottom:2px; letter-spacing:-.5px; }
+.esd-sub { font-size:11px; color:rgba(255,255,255,.5); text-align:center; margin-bottom:12px; }
+.esd-alert { background:rgba(255,215,0,.07); border:1px solid rgba(255,215,0,.2); border-radius:12px; padding:10px 14px; width:100%; text-align:center; margin-bottom:12px; }
+.esd-progress { display:flex; gap:5px; justify-content:center; margin-bottom:10px; }
+.esd-dot { width:26px; height:5px; border-radius:3px; background:rgba(255,255,255,.12); transition:all .4s; }
+.esd-dot.done { background:var(--gol); }
+.esd-dot.active { background:#fff; box-shadow:0 0 6px rgba(255,255,255,.5); }
+/* 3D card flip */
+.card-scene { width:100%; height:190px; perspective:900px; cursor:pointer; margin-bottom:10px; user-select:none; -webkit-user-select:none; }
+.card-3d { width:100%; height:100%; transform-style:preserve-3d; transition:transform .55s cubic-bezier(.4,0,.2,1); }
+.card-3d.flipped { transform:rotateY(180deg); }
+.card-face { position:absolute; width:100%; height:100%; backface-visibility:hidden; -webkit-backface-visibility:hidden; border-radius:20px; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:6px; padding:16px; }
+.cfront { background:linear-gradient(135deg,#2d1b69,#4a1058); border:2px solid rgba(200,153,26,.35); box-shadow:0 8px 24px rgba(0,0,0,.5); }
+.cback { background:#fff; transform:rotateY(180deg); box-shadow:0 8px 24px rgba(0,0,0,.4); }
+.c-pattern { position:absolute; font-size:72px; opacity:.07; pointer-events:none; }
+.c-icon { font-size:54px; position:relative; z-index:1; }
+.c-hint { font-size:11px; color:rgba(255,255,255,.45); text-align:center; position:relative; z-index:1; }
+.c-tap { font-size:9px; color:rgba(255,215,0,.4); text-transform:uppercase; letter-spacing:1px; position:relative; z-index:1; }
+.c-title { font-size:13px; font-weight:800; color:var(--dark); text-align:center; line-height:1.3; }
+.c-calc { background:#E8F5E9; border-radius:12px; padding:8px 14px; width:100%; text-align:center; }
+.c-val { font-size:24px; font-weight:900; color:var(--green); line-height:1; }
+.c-sub-calc { font-size:10px; color:var(--sub); margin-top:1px; }
+.c-tip { font-size:11px; color:var(--sub); text-align:center; line-height:1.5; }
+.c-rwd { background:var(--gold); border-radius:20px; padding:3px 14px; font-size:11px; font-weight:700; color:#fff; }
+/* nav buttons */
+.esd-navrow { display:flex; gap:8px; width:100%; margin-bottom:10px; }
+.esd-nbtn { flex:1; padding:10px; border:none; border-radius:14px; font-size:13px; font-weight:700; cursor:pointer; transition:all .2s; }
+.esd-prev { background:rgba(255,255,255,.09); color:rgba(255,255,255,.65); }
+.esd-next { background:var(--green); color:#fff; box-shadow:0 4px 14px rgba(26,122,60,.35); }
+/* Sponsor */
+.spon-card { background:rgba(255,255,255,.05); border:1px solid rgba(255,255,255,.1); border-radius:14px; padding:10px 14px; width:100%; display:flex; align-items:center; gap:10px; margin-bottom:10px; cursor:pointer; }
+.spon-ico { font-size:28px; flex-shrink:0; }
+.spon-lbl { font-size:9px; color:rgba(255,255,255,.28); text-transform:uppercase; letter-spacing:1px; }
+.spon-name { font-size:13px; font-weight:700; color:rgba(255,255,255,.8); }
+.spon-cta { font-size:11px; color:var(--gol); }
+/* Timer */
+.timer-card { background:rgba(255,255,255,.06); border:1.5px solid rgba(200,153,26,.25); border-radius:20px; padding:14px 16px; width:100%; text-align:center; margin-bottom:10px; }
+.timer-ttl { font-size:13px; font-weight:800; color:rgba(255,255,255,.9); }
+.timer-sub { font-size:10px; color:rgba(255,255,255,.4); line-height:1.5; margin:4px 0 8px; }
+.timer-disp { font-size:48px; font-weight:900; color:var(--gol); font-variant-numeric:tabular-nums; line-height:1; margin-bottom:10px; transition:color .3s; }
+.timer-disp.done { color:var(--gl); }
+.timer-btn { background:linear-gradient(135deg,var(--green),var(--gl)); color:#fff; border:none; border-radius:50px; padding:13px 28px; font-size:14px; font-weight:700; cursor:pointer; width:100%; transition:background .3s; }
+.timer-btn.holding { background:linear-gradient(135deg,#7B1FA2,#9C27B0); animation:pulse 1s infinite; }
+.timer-btn.done { background:linear-gradient(135deg,#1565C0,#1976D2); }
+</style>
+</head>
+<body>
+<div class="device">
+  <div class="notch"></div>
+  <button class="mute-btn" id="muteBtn" onclick="toggleMute()">ð</button>
+  <div class="toast" id="toast"><span id="ti">ð</span><span id="tt">+50 Bufunfas!</span></div>
+
+  <!-- SPLASH -->
+  <div class="screen active" id="splash">
+    <div class="s-tiger">ð¯</div>
+    <div class="s-logo">VIRE O JOGO</div>
+    <div class="s-tag">O Ãºnico jogo onde vocÃª sempre pode ganhar.</div>
+    <!-- SLOT MACHINE PARÃDIA -->
+    <div id="slotmachine" style="background:rgba(0,0,0,.35);border-radius:18px;padding:12px 20px;margin:0 20px 16px;cursor:pointer;" onclick="spinSlot()">
+      <div style="font-size:10px;color:rgba(255,255,255,.45);text-transform:uppercase;letter-spacing:1px;text-align:center;margin-bottom:8px;">ð° MÃ¡quina da Riqueza REAL</div>
+      <div style="display:flex;gap:6px;justify-content:center;align-items:center;">
+        <div style="background:rgba(255,255,255,.1);border-radius:10px;width:62px;height:62px;display:flex;align-items:center;justify-content:center;font-size:32px;overflow:hidden;" id="reel1">ð°</div>
+        <div style="background:rgba(255,255,255,.1);border-radius:10px;width:62px;height:62px;display:flex;align-items:center;justify-content:center;font-size:32px;overflow:hidden;" id="reel2">ð</div>
+        <div style="background:rgba(255,255,255,.1);border-radius:10px;width:62px;height:62px;display:flex;align-items:center;justify-content:center;font-size:32px;overflow:hidden;" id="reel3">ð</div>
+      </div>
+      <div style="font-size:10px;color:rgba(255,255,255,.4);text-align:center;margin-top:6px;">ð Toque para girar â aqui vocÃª sempre ganha</div>
+    </div>
+    <button class="s-btn" onclick="LEVER();setTimeout(()=>goTo('onboard'),600)">COMEÃAR AGORA â GRÃTIS</button>
+    <span class="s-free">Sem depÃ³sito. Sem risco. Probabilidade de ganhar: <b style="color:var(--gol)">100%</b></span>
+    <div class="s-anti"><span>Enquanto as Bets destruÃ­ram <b>R$ 30 bilhÃµes</b> em 2024,<br>o Vire o Jogo construiu futuros. <b>Venha para o lado certo.</b></span></div>
+  </div>
+
+  <!-- ONBOARD -->
+  <div class="screen" id="onboard">
+    <div style="text-align:center;margin-bottom:14px;">
+      <div class="ob-steps" style="justify-content:center">
+        <div class="ob-dot active" id="d1"></div><div class="ob-dot" id="d2"></div><div class="ob-dot" id="d3"></div>
+      </div>
+    </div>
+    <div class="ob-icon" id="obi">ð°</div>
+    <div class="ob-q" id="obq">Qual Ã© o seu maior vilÃ£o financeiro hoje?</div>
+    <div class="ob-sub" id="obs">Seja honesto â sÃ³ assim a MissÃ£o funciona.</div>
+    <div class="ob-opts" id="obo">
+      <div class="ob-opt" onclick="pickOb(this)"><span>ð³</span> DÃ­vidas no cartÃ£o ou cheque especial</div>
+      <div class="ob-opt" onclick="pickOb(this)"><span>ð¬</span> Gasto impulsivo â compro sem pensar</div>
+      <div class="ob-opt" onclick="pickOb(this)"><span>ð</span> NÃ£o tenho reserva de emergÃªncia</div>
+      <div class="ob-opt" onclick="pickOb(this)"><span>ð°</span> Perdi dinheiro em apostas</div>
+    </div>
+  </div>
+
+  <!-- PERFIL -->
+  <div class="screen" id="perfil">
+    <div style="font-size:11px;color:rgba(255,255,255,.5);text-transform:uppercase;letter-spacing:1px;margin-top:8px;">Seu perfil foi criado!</div>
+    <div class="p-badge">ð¦¸</div>
+    <div class="p-title">Guerreiro Financeiro</div>
+    <div class="p-name">NÃ­vel 1 Â· 0 Bufunfas ðª</div>
+    <div style="background:rgba(255,255,255,.1);border-radius:20px;padding:4px 14px;font-size:11px;color:rgba(255,255,255,.8);font-weight:700;">MissÃ£o Iniciada</div>
+    <div class="p-plan">
+      <div style="font-size:10px;color:rgba(255,255,255,.5);text-transform:uppercase;letter-spacing:1px;">Sua Jornada Ã  Liberdade</div>
+      <div class="p-phases">
+        <div class="p-phase" style="border-color:#E53935">FASE 1 Sair do Vermelho</div>
+        <div class="p-phase" style="border-color:#C8991A">FASE 2 Reserva</div>
+        <div class="p-phase" style="border-color:#1A7A3C">FASE 3 Investir</div>
+        <div class="p-phase" style="border-color:#9C27B0">FASE 4 ð Liberdade</div>
+      </div>
+    </div>
+    <p style="font-size:13px;color:rgba(255,255,255,.65);text-align:center;line-height:1.6;">Cada hÃ¡bito certo faz seu personagem <b style="color:var(--gol)">avanÃ§ar no mapa</b>. Cada deslize, recuar.</p>
+    <button class="btn-g" onclick="FANFARE();setTimeout(()=>goTo('home'),400)">ENTRAR NO JOGO â</button>
+  </div>
+
+  <!-- HOME -->
+  <div class="screen" id="home">
+    <div class="h-hdr">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;">
+        <div><div class="h-greet">Bom dia, Eduardo ð</div><div class="h-name">ð¦¸ Guerreiro Financeiro</div></div>
+        <div style="text-align:right;"><div style="font-size:22px;font-weight:900;color:var(--gol)">ð¥ 7</div><div style="font-size:10px;color:rgba(255,255,255,.6)">dias seguidos</div></div>
+      </div>
+      <div class="xb-wrap"><div class="xb" id="xb"></div></div>
+      <div class="xb-lbl"><span>ðª 420 Bufunfas</span><span>PrÃ³ximo nÃ­vel: 1.000 ðª</span></div>
+    </div>
+    <div class="hbody">
+      <div class="stats">
+        <div class="sc" onclick="BELL();showToast('ðª','420 Bufunfas acumuladas!')">
+          <div class="sc-icon">ðª</div><div class="sc-val">420</div><div class="sc-lbl">Bufunfas</div>
+        </div>
+        <div class="sc" onclick="C()">
+          <div class="sc-icon">ð</div><div class="sc-val">3</div><div class="sc-lbl">Badges</div>
+        </div>
+        <div class="sc" onclick="navTo('mapa')">
+          <div class="sc-icon">ð</div><div class="sc-val">42%</div><div class="sc-lbl">Progresso</div>
+        </div>
+      </div>
+      <div class="minimap" onclick="navTo('mapa');SPIN()">
+        <div class="mm-title"><span>ðºï¸ Sua Jornada</span><span style="color:var(--green);font-size:11px;">Ver mapa completo â</span></div>
+        <div class="mm-road" style="position:relative">
+          <div class="mm-char">ð¦¸</div>
+          <div class="mn done">â</div><div class="mn active">ð¥</div><div class="mn locked">ð</div><div class="mn locked">ð</div>
+        </div>
+        <div style="display:flex;justify-content:space-between;margin-top:6px;">
+          <span style="font-size:9px;color:#E53935;font-weight:700;">DÃ­vidas</span>
+          <span style="font-size:9px;color:var(--gold);font-weight:700;">Reserva â aqui</span>
+          <span style="font-size:9px;color:#999">Invest.</span>
+          <span style="font-size:9px;color:#999">ð Livre</span>
+        </div>
+      </div>
+      <div class="mcard">
+        <div class="mhdr"><div class="mtitle">MissÃµes de hoje</div><div class="stk">ð¥ SequÃªncia 7 dias</div></div>
+        <div class="mitem" onclick="completeMission(this,50)">
+          <div class="mck done">â</div><div class="mtxt done">NÃ£o gastei por impulso esta manhÃ£</div><div class="mbuf">+50 ðª</div>
+        </div>
+        <div class="mitem" onclick="completeMission(this,80)">
+          <div class="mck done">â</div><div class="mtxt done">Levei marmita â economizei R$ 35</div><div class="mbuf">+80 ðª</div>
+        </div>
+        <div class="mitem" onclick="completeMission(this,60)">
+          <div class="mck"></div><div class="mtxt">Registrei todos os gastos de hoje</div><div class="mbuf">+60 ðª</div>
+        </div>
+        <div class="mitem" onclick="completeMission(this,120)">
+          <div class="mck"></div><div class="mtxt">Fiz minha transferÃªncia de poupanÃ§a</div><div class="mbuf">+120 ðª</div>
+        </div>
+      </div>
+      <!-- CaÃ§a-Fortuna promo card -->
+      <div style="background:linear-gradient(135deg,#1a0a2e,#4a1058);border-radius:20px;padding:14px 16px;margin-bottom:14px;cursor:pointer;border:1px solid rgba(200,153,26,.28);box-shadow:0 4px 14px rgba(0,0,0,.15);" onclick="CARDS();navTo('escudo')">
+        <div style="display:flex;align-items:center;gap:12px;">
+          <div style="font-size:38px;line-height:1;">ð</div>
+          <div style="flex:1;">
+            <div style="font-size:13px;font-weight:800;color:#fff;">Sentiu o impulso? Entra aqui.</div>
+            <div style="font-size:11px;color:rgba(255,255,255,.45);margin-top:2px;">CaÃ§a-Fortuna Â· Vira cartas Â· Ganha Bufunfas</div>
+          </div>
+          <div style="font-size:11px;color:var(--gol);font-weight:800;">ð¡ï¸ â</div>
+        </div>
+      </div>
+
+      <button class="btn-p" onclick="C();navTo('checkin')">ð Fazer Check-in do Dia</button>
+    </div>
+    <div class="bnav">
+      <div class="nitem active" onclick="navTo('home')"><span class="nico">ð </span><span class="nlbl">InÃ­cio</span></div>
+      <div class="nitem" onclick="navTo('mapa')"><span class="nico">ðºï¸</span><span class="nlbl">Mapa</span></div>
+      <div class="nitem" onclick="navTo('checkin')"><span class="nico">ð</span><span class="nlbl">Check-in</span></div>
+      <div class="nitem" onclick="navTo('celebracao')"><span class="nico">ð</span><span class="nlbl">VitÃ³rias</span></div>
+      <div class="nitem" onclick="navTo('escudo')"><span class="nico">ð¡ï¸</span><span class="nlbl">Escudo</span></div>
+    </div>
+  </div>
+
+  <!-- MAPA COMPLETO -->
+  <div class="screen" id="mapa">
+    <div class="mapa-ttl">ðºï¸ Mapa da Jornada</div>
+    <div class="mapa-sub-lbl">VocÃª estÃ¡ na Fase 2 â Reserva de EmergÃªncia</div>
+    <div class="gate">
+      <div class="gate-ico">ð°</div>
+      <div class="gate-lbl">LIBERDADE FINANCEIRA</div>
+      <div class="gate-sub">Seu destino final</div>
+    </div>
+
+    <div class="mcanvas">
+      <svg class="msvg" viewBox="0 0 340 420">
+        <defs>
+          <linearGradient id="rg" x1="0" y1="1" x2="0" y2="0">
+            <stop offset="0%" stop-color="#E53935" stop-opacity=".6"/>
+            <stop offset="35%" stop-color="#C8991A" stop-opacity=".6"/>
+            <stop offset="65%" stop-color="#1A7A3C" stop-opacity=".6"/>
+            <stop offset="100%" stop-color="#9C27B0" stop-opacity=".6"/>
+          </linearGradient>
+          <filter id="glow"><feGaussianBlur stdDeviation="3" result="blur"/><feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+        </defs>
+        <!-- Road shadow -->
+        <path d="M 170 390 C 230 355 100 310 145 265 C 185 225 265 215 232 172 C 202 132 118 132 142 90 C 162 58 202 46 170 26"
+              fill="none" stroke="url(#rg)" stroke-width="22" stroke-linecap="round" opacity=".3"/>
+        <!-- Completed path -->
+        <path d="M 170 390 C 230 355 100 310 145 265 C 185 225 265 215 232 172"
+              fill="none" stroke="#25A352" stroke-width="5" stroke-linecap="round" stroke-dasharray="7 4" opacity=".85"/>
+        <!-- Locked path dotted -->
+        <path d="M 232 172 C 202 132 118 132 142 90 C 162 58 202 46 170 26"
+              fill="none" stroke="rgba(255,255,255,.2)" stroke-width="4" stroke-linecap="round" stroke-dasharray="4 6"/>
+        <!-- Decorative icons -->
+        <text x="196" y="330" font-size="13" opacity=".45">â­</text>
+        <text x="108" y="280" font-size="11" opacity=".35">ðª</text>
+        <text x="262" y="200" font-size="11" opacity=".3">â­</text>
+        <text x="105" y="115" font-size="10" opacity=".2">ð</text>
+      </svg>
+
+      <!-- FASE 1 â concluÃ­da -->
+      <div class="pnode" style="left:170px;top:390px;" onclick="COIN();showToast('â','Fase 1 ConcluÃ­da! Saiu do vermelho!')">
+        <div class="pcirc" style="background:linear-gradient(135deg,#E53935,#b71c1c)">â</div>
+        <div class="plbl">FASE 1<br>Sair do Vermelho</div>
+        <div class="pstat ps-done">CONCLUÃDA</div>
+      </div>
+
+      <!-- FASE 2 â ativa (herÃ³i aqui) -->
+      <div class="pnode" style="left:234px;top:172px;" onclick="COIN();showToast('ð¥','VocÃª estÃ¡ aqui! Fase 2 em andamento â 42%!')">
+        <div class="pcirc" style="background:linear-gradient(135deg,#C8991A,#f0c040);filter:drop-shadow(0 0 14px rgba(200,153,26,.7))">ð¥</div>
+        <div class="plbl">FASE 2<br>Reserva de EmergÃªncia</div>
+        <div class="pstat ps-active">EM CURSO Â· 42%</div>
+      </div>
+
+      <!-- FASE 3 â bloqueada -->
+      <div class="pnode" style="left:136px;top:108px;" onclick="BZ();showToast('ð','Complete a Fase 2 para desbloquear!')">
+        <div class="pcirc" style="background:rgba(255,255,255,.1);border:2px solid rgba(255,255,255,.2)">ð</div>
+        <div class="plbl" style="color:rgba(255,255,255,.35)">FASE 3<br>Investimentos</div>
+        <div class="pstat ps-lock">BLOQUEADA</div>
+      </div>
+
+      <!-- FASE 4 â bloqueada -->
+      <div class="pnode" style="left:170px;top:26px;" onclick="BZ();showToast('ð','A liberdade te espera ao final da jornada!')">
+        <div class="pcirc" style="background:rgba(255,255,255,.07);border:2px solid rgba(255,255,255,.15)">ð</div>
+        <div class="plbl" style="color:rgba(255,255,255,.28)">FASE 4<br>Liberdade Financeira</div>
+        <div class="pstat ps-lock">BLOQUEADA</div>
+      </div>
+
+      <!-- HERÃI posicionado na Fase 2 -->
+      <div class="hero" style="left:200px;top:148px;">ð¦¸</div>
+    </div>
+
+    <!-- Barra de progresso -->
+    <div class="mprog">
+      <div class="mpr"><span class="mpl">Progresso Geral</span><span class="mpv">42%</span></div>
+      <div class="mpbw"><div class="mpb" style="width:42%"></div></div>
+      <div class="mpr" style="margin-top:8px;margin-bottom:0">
+        <span class="mpl">ðª Bufunfas</span><span class="mpv">420 / 1.000</span>
+      </div>
+    </div>
+
+    <!-- Estrelas -->
+    <div style="text-align:center;margin:4px 0;">
+      <div style="font-size:10px;color:rgba(255,255,255,.45);margin-bottom:4px;">Conquistas desbloqueadas</div>
+      <div class="stars">
+        <div class="star lit">â­</div><div class="star lit">â­</div><div class="star lit">â­</div>
+        <div class="star">â­</div><div class="star">â­</div>
+      </div>
+    </div>
+
+    <!-- PrÃ³ximos marcos -->
+    <div class="mstones">
+      <div style="font-size:10px;color:rgba(255,255,255,.45);text-transform:uppercase;letter-spacing:1px;margin-bottom:8px;">PrÃ³ximos Marcos</div>
+      <div class="mstone" onclick="COIN();showToast('ð¦','Meta: R$ 1.500 na reserva!')">
+        <span class="msi">ð¦</span>
+        <div class="mst"><div class="msn">R$ 1.500 na reserva</div><div class="msd">73% Â· Faltam R$ 405</div></div>
+        <span class="msbuf">+200 ðª</span>
+      </div>
+      <div class="mstone" onclick="COIN();showToast('ð','Meta: 30 dias sem apostas!')">
+        <span class="msi">ð</span>
+        <div class="mst"><div class="msn">30 dias sem apostas</div><div class="msd">SequÃªncia atual: 18 dias</div></div>
+        <span class="msbuf">+300 ðª</span>
+      </div>
+      <div class="mstone" onclick="BZ();showToast('ð','Complete os marcos anteriores primeiro!')">
+        <span class="msi">ð</span>
+        <div class="mst"><div class="msn" style="color:rgba(255,255,255,.35)">Primeiro investimento</div><div class="msd">Bloqueado Â· Fase 3</div></div>
+        <span class="msbuf" style="color:rgba(255,255,255,.25)">+500 ðª</span>
+      </div>
+    </div>
+
+    <div style="padding:14px 16px 0;width:100%">
+      <button class="btn-g" onclick="C();navTo('checkin')">ð Fazer Check-in Agora</button>
+    </div>
+
+    <div class="bnav">
+      <div class="nitem" onclick="navTo('home')"><span class="nico">ð </span><span class="nlbl">InÃ­cio</span></div>
+      <div class="nitem active" onclick="navTo('mapa')"><span class="nico">ðºï¸</span><span class="nlbl" style="color:var(--green)">Mapa</span></div>
+      <div class="nitem" onclick="navTo('checkin')"><span class="nico">ð</span><span class="nlbl">Check-in</span></div>
+      <div class="nitem" onclick="navTo('celebracao')"><span class="nico">ð</span><span class="nlbl">VitÃ³rias</span></div>
+      <div class="nitem" onclick="navTo('escudo')"><span class="nico">ð¡ï¸</span><span class="nlbl">Escudo</span></div>
+    </div>
+  </div>
+
+  <!-- CHECKIN -->
+  <div class="screen" id="checkin">
+    <div class="ci-hdr">
+      <div class="ci-greet">Check-in da tarde Â· 13h</div>
+      <div class="ci-ttl">Como foi o seu dia<br>financeiro atÃ© agora?</div>
+    </div>
+    <div class="ci-char">ð¦¸</div>
+    <div class="ciq">
+      <div class="cqn">Pergunta 1 de 3</div>
+      <div class="cqt">VocÃª resistiu a alguma compra por impulso hoje?</div>
+      <div class="cqb">
+        <button class="cbb yes" onclick="ansCI(this,'y')">â Sim! Resisti</button>
+        <button class="cbb no" onclick="ansCI(this,'n')">â NÃ£o resisti</button>
+      </div>
+    </div>
+    <div class="ciq">
+      <div class="cqn">Pergunta 2 de 3</div>
+      <div class="cqt">VocÃª registrou algum gasto hoje?</div>
+      <div class="cqb">
+        <button class="cbb yes" onclick="ansCI(this,'y')">â Registrei</button>
+        <button class="cbb no" onclick="ansCI(this,'n')">â Esqueci</button>
+      </div>
+    </div>
+    <div class="ciq">
+      <div class="cqn">Pergunta 3 de 3</div>
+      <div class="cqt">VocÃª abriu alguma plataforma de apostas hoje?</div>
+      <div class="cqb">
+        <button class="cbb yes" onclick="ansCI(this,'y')">â NÃ£o abri</button>
+        <button class="cbb no" onclick="ansCI(this,'n')">â Abri</button>
+      </div>
+    </div>
+    <button class="btn-p" style="margin-top:8px" onclick="WIN();goTo('celebracao')">Enviar Check-in â</button>
+    <div class="bnav">
+      <div class="nitem" onclick="navTo('home')"><span class="nico">ð </span><span class="nlbl">InÃ­cio</span></div>
+      <div class="nitem" onclick="navTo('mapa')"><span class="nico">ðºï¸</span><span class="nlbl">Mapa</span></div>
+      <div class="nitem active" onclick="navTo('checkin')"><span class="nico">ð</span><span class="nlbl" style="color:var(--green)">Check-in</span></div>
+      <div class="nitem" onclick="navTo('celebracao')"><span class="nico">ð</span><span class="nlbl">VitÃ³rias</span></div>
+      <div class="nitem" onclick="navTo('escudo')"><span class="nico">ð¡ï¸</span><span class="nlbl">Escudo</span></div>
+    </div>
+  </div>
+
+  <!-- CELEBRAÃÃO -->
+  <div class="screen" id="celebracao">
+    <div class="confetti" id="confetti"></div>
+    <div class="ctl-trophy">ð</div>
+    <div class="ctl-title">VOCÃ VENCEU!</div>
+    <div class="ctl-sub">ParabÃ©ns! Completou <b>7 dias seguidos</b>!<br>Fase 2 estÃ¡ <b>42% concluÃ­da</b>.</div>
+    <div class="ctl-badge">
+      <div class="ctl-bl">Novo Badge Conquistado</div>
+      <div class="ctl-bn">ð¥ Semana Guerreira</div>
+    </div>
+    <div class="ctl-coins"><span>VocÃª ganhou</span><b>ðª +500 Bufunfas</b><span>hoje!</span></div>
+    <p style="font-size:12px;color:rgba(255,255,255,.6);text-align:center;line-height:1.6;">E-mail de parabÃ©ns enviado! ð<br>Seu herÃ³i avanÃ§ou no mapa da liberdade. ðºï¸</p>
+    <div style="background:rgba(0,0,0,.2);border-radius:12px;padding:8px 16px;font-size:11px;color:rgba(255,255,255,.5);text-align:center;font-style:italic;">
+      ð° ParÃ³dia: no Tigrinho sua chance de ganhar Ã© &lt;1%.<br>Aqui Ã© <b style="color:var(--gol)">100%</b> â porque vocÃª controla o jogo.
+    </div>
+    <button class="btn-g" onclick="ROAR();setTimeout(()=>navTo('home'),300)">â Voltar ao InÃ­cio</button>
+    <div class="bnav">
+      <div class="nitem" onclick="navTo('home')"><span class="nico">ð </span><span class="nlbl">InÃ­cio</span></div>
+      <div class="nitem" onclick="navTo('mapa')"><span class="nico">ðºï¸</span><span class="nlbl">Mapa</span></div>
+      <div class="nitem" onclick="navTo('checkin')"><span class="nico">ð</span><span class="nlbl">Check-in</span></div>
+      <div class="nitem active" onclick="navTo('celebracao')"><span class="nico">ð</span><span class="nlbl" style="color:var(--green)">VitÃ³rias</span></div>
+      <div class="nitem" onclick="navTo('escudo')"><span class="nico">ð¡ï¸</span><span class="nlbl">Escudo</span></div>
+    </div>
+  </div>
+
+  <!-- ââââââââââââââââââââââââââââââââââââââ
+       ESCUDO: CAÃA-FORTUNA (Anti-Bet Zone)
+       ââââââââââââââââââââââââââââââââââââââ -->
+  <div class="screen" id="escudo">
+    <div class="esd-ttl">ð CaÃ§a-Fortuna</div>
+    <div class="esd-sub">Vira as cartas Â· aprende Â· ganha Bufunfas!</div>
+
+    <div class="esd-alert">
+      <span style="font-size:11px;color:rgba(255,255,255,.65);">ð¡ï¸ <b style="color:var(--gol)">Sente o impulso chegando?</b><br>Fica aqui por 1 minuto. O impulso passa. VocÃª passa de fase.</span>
+    </div>
+
+    <!-- Progress dots -->
+    <div class="esd-progress" id="esdDots"></div>
+
+    <!-- CARD FLIP -->
+    <div class="card-scene" id="cardScene" onclick="flipCard()">
+      <div class="card-3d" id="card3d">
+        <!-- Front: mystery casino card -->
+        <div class="card-face cfront">
+          <div class="c-pattern">ð´</div>
+          <div class="c-icon" id="cFrontIco">ðª</div>
+          <div class="c-hint" id="cHint">Vira para descobrir o segredo!</div>
+          <div class="c-tap">ð toque para virar</div>
+        </div>
+        <!-- Back: educational content -->
+        <div class="card-face cback">
+          <div class="c-title" id="cTitle">â</div>
+          <div class="c-calc">
+            <div class="c-val" id="cVal">â</div>
+            <div class="c-sub-calc" id="cSubCalc">â</div>
+          </div>
+          <div class="c-tip" id="cTip">â</div>
+          <div class="c-rwd" id="cRwd">â</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Nav buttons -->
+    <div class="esd-navrow">
+      <button class="esd-nbtn esd-prev" id="esdPrev" onclick="prevCard()">â Anterior</button>
+      <button class="esd-nbtn esd-next" id="esdNext" onclick="nextCard()">PrÃ³xima â¶</button>
+    </div>
+
+    <!-- Sponsor slot -->
+    <div class="spon-card" onclick="COIN(3);showToast('ð¦','Parceiro do Vire o Jogo!')">
+      <div class="spon-ico" id="sponIco">ð¦</div>
+      <div>
+        <div class="spon-lbl">Patrocinado por</div>
+        <div class="spon-name" id="sponName">Nubank</div>
+        <div class="spon-cta" id="sponCta">Abra sua conta e invista automÃ¡tico â</div>
+      </div>
+    </div>
+
+    <!-- Anti-impulse timer challenge -->
+    <div class="timer-card">
+      <div class="timer-ttl">ð¡ï¸ Desafio Anti-Impulso</div>
+      <div class="timer-sub">Segure o botÃ£o por 60 segundos e ganhe <b style="color:var(--gol)">+200 ðª</b><br><i>O impulso passa. VocÃ« avanÃ§a.</i></div>
+      <div class="timer-disp" id="timerDisp">60</div>
+      <button class="timer-btn" id="timerBtn"
+        onmousedown="startTimer(event)" ontouchstart="startTimer(event)"
+        onmouseup="stopTimer()" ontouchend="stopTimer()"
+        onmouseleave="stopTimer()">
+        ð¡ï¸ Segura o Impulso!
+      </button>
+    </div>
+
+    <div class="bnav">
+      <div class="nitem" onclick="navTo('home')"><span class="nico">ð </span><span class="nlbl">InÃ­cio</span></div>
+      <div class="nitem" onclick="navTo('mapa')"><span class="nico">ðºï¸</span><span class="nlbl">Mapa</span></div>
+      <div class="nitem" onclick="navTo('checkin')"><span class="nico">ð</span><span class="nlbl">Check-in</span></div>
+      <div class="nitem" onclick="navTo('celebracao')"><span class="nico">ð</span><span class="nlbl">VitÃ³rias</span></div>
+      <div class="nitem active" onclick="navTo('escudo')"><span class="nico">ð¡ï¸</span><span class="nlbl" style="color:var(--green)">Escudo</span></div>
+    </div>
+  </div>
+</div>
+
+<!-- OPINION CARD -->
+<div style="max-width:375px;width:100%;background:rgba(255,255,255,.06);border-radius:20px;padding:18px;color:#fff;">
+  <div style="font-size:14px;font-weight:800;color:#F0C040;margin-bottom:10px;">ð¬ TigrÃ£o vs Vire o Jogo â Minha anÃ¡lise</div>
+  <div style="font-size:12px;line-height:1.7;color:rgba(255,255,255,.8);">
+    <b style="color:#E57373">ð¯ TigrÃ£o</b> â ParÃ³dia imediata, todo brasileiro entende. "TigrÃ£o" supera o Tigrinho. Viralidade garantida. <i>Risco:</i> confusÃ£o com bet real + possÃ­vel conflito de marca com PG Soft.<br><br>
+    <b style="color:#81C784">ð¯ Vire o Jogo</b> â Universal, juridicamente limpo, narrativa duradoura alÃ©m das Bets. Produto cresce sem depender do inimigo.<br><br>
+    <b style="color:#F0C040">ð¡ Proposta:</b> <b>Vire o Jogo</b> como marca-mÃ£e + <b>TigrÃ£o</b> como mascote interno do jogo. "Jogue com o TigrÃ£o" nas campanhas. Viral no lanÃ§amento, sÃ³lido no longo prazo.
+  </div>
+</div>
+
+<script>
+/* âââââââââââ AUDIO ENGINE âââââââââââ */
+let ctx=null, muted=false;
+function getCtx(){ if(!ctx) ctx=new(window.AudioContext||window.webkitAudioContext)(); if(ctx.state==='suspended')ctx.resume(); return ctx; }
+function toggleMute(){ muted=!muted; document.getElementById('muteBtn').textContent=muted?'ð':'ð'; }
+
+/* Coin cascade â jackpot */
+function COIN(n){
+  if(muted)return; const c=getCtx(); n=n||7;
+  for(let i=0;i<n;i++) setTimeout(()=>{
+    const o=c.createOscillator(),g=c.createGain();
+    const f=820+Math.random()*580;
+    o.type='sine'; o.frequency.setValueAtTime(f,c.currentTime);
+    o.frequency.exponentialRampToValueAtTime(f*.55,c.currentTime+.13);
+    g.gain.setValueAtTime(.28,c.currentTime); g.gain.exponentialRampToValueAtTime(.001,c.currentTime+.15);
+    o.connect(g);g.connect(c.destination);o.start();o.stop(c.currentTime+.16);
+  },i*52+Math.random()*28);
+}
+
+/* Slot machine reel spin */
+function SPIN(){
+  if(muted)return; const c=getCtx();
+  const buf=c.createBuffer(1,c.sampleRate*.65,c.sampleRate);
+  const d=buf.getChannelData(0);
+  for(let i=0;i<d.length;i++){
+    const t=i/c.sampleRate, speed=1-t*1.5;
+    d[i]=(Math.random()*2-1)*.18*Math.max(0,speed)*(0.5+0.5*Math.sin(2*Math.PI*55*t));
+  }
+  const s=c.createBufferSource(),g=c.createGain();
+  s.buffer=buf; g.gain.setValueAtTime(.4,c.currentTime); g.gain.linearRampToValueAtTime(0,c.currentTime+.6);
+  s.connect(g);g.connect(c.destination);s.start();
+}
+
+/* Big win fanfare â slot jackpot jingle */
+function WIN(){
+  if(muted)return; const c=getCtx();
+  [[523,0],[659,.12],[784,.24],[1047,.38],[1319,.54],[1568,.72]].forEach(([f,t])=>{
+    const o=c.createOscillator(),g=c.createGain();
+    o.type='square'; o.frequency.value=f;
+    const T=c.currentTime+t;
+    g.gain.setValueAtTime(0,T); g.gain.linearRampToValueAtTime(.15,T+.02);
+    g.gain.exponentialRampToValueAtTime(.001,T+.38);
+    o.connect(g);g.connect(c.destination);o.start(T);o.stop(T+.4);
+    const o2=c.createOscillator(),g2=c.createGain();
+    o2.type='sine'; o2.frequency.value=f*2;
+    g2.gain.setValueAtTime(.06,T); g2.gain.exponentialRampToValueAtTime(.001,T+.3);
+    o2.connect(g2);g2.connect(c.destination);o2.start(T);o2.stop(T+.32);
+  });
+  setTimeout(()=>COIN(12),800);
+}
+
+/* Level up arpeggio */
+function LU(){
+  if(muted)return; const c=getCtx();
+  [392,523,659,784,1047].forEach((f,i)=>{
+    const o=c.createOscillator(),g=c.createGain();
+    o.type='triangle'; o.frequency.value=f;
+    const T=c.currentTime+i*.1;
+    g.gain.setValueAtTime(.22,T); g.gain.exponentialRampToValueAtTime(.001,T+.28);
+    o.connect(g);g.connect(c.destination);o.start(T);o.stop(T+.3);
+  });
+}
+
+/* Click â casino chip */
+function C(){
+  if(muted)return; const c=getCtx();
+  const buf=c.createBuffer(1,c.sampleRate*.04,c.sampleRate);
+  const d=buf.getChannelData(0);
+  for(let i=0;i<d.length;i++) d[i]=(Math.random()*2-1)*(1-i/d.length);
+  const s=c.createBufferSource(),g=c.createGain();
+  s.buffer=buf; g.gain.value=.32;
+  s.connect(g);g.connect(c.destination);s.start();
+}
+
+/* Ding â positive answer */
+function DING(){
+  if(muted)return; const c=getCtx();
+  [880,1108].forEach((f,i)=>{
+    const o=c.createOscillator(),g=c.createGain();
+    o.type='sine'; o.frequency.value=f;
+    const T=c.currentTime+i*.12;
+    g.gain.setValueAtTime(.22,T); g.gain.exponentialRampToValueAtTime(.001,T+.42);
+    o.connect(g);g.connect(c.destination);o.start(T);o.stop(T+.44);
+  });
+  setTimeout(()=>COIN(3),260);
+}
+
+/* Buzz â wrong / locked */
+function BZ(){
+  if(muted)return; const c=getCtx();
+  const o=c.createOscillator(),g=c.createGain();
+  o.type='sawtooth'; o.frequency.value=110;
+  g.gain.setValueAtTime(.22,c.currentTime); g.gain.exponentialRampToValueAtTime(.001,c.currentTime+.38);
+  o.connect(g);g.connect(c.destination);o.start();o.stop(c.currentTime+.4);
+}
+
+/* Drum roll â reel intro */
+function DR(){
+  if(muted)return; const c=getCtx();
+  for(let i=0;i<14;i++){
+    const buf=c.createBuffer(1,c.sampleRate*.055,c.sampleRate);
+    const d=buf.getChannelData(0);
+    for(let j=0;j<d.length;j++) d[j]=(Math.random()*2-1)*Math.exp(-j/(d.length*.3));
+    const s=c.createBufferSource(),g=c.createGain();
+    s.buffer=buf; g.gain.value=.12+(i/14)*.22;
+    s.connect(g);g.connect(c.destination);
+    s.start(c.currentTime+i*(0.14-i*.007));
+  }
+}
+
+/* âââââââââââ PARODY SOUNDS âââââââââââ */
+
+/* ð¯ RUGIDO DO TIGRÃO â roar sintetizado (parÃ³dia do Fortune Tiger) */
+function ROAR(){
+  if(muted)return; const c=getCtx();
+  // Corpo grave do rugido
+  [60,80,45,55].forEach((f,i)=>{
+    const o=c.createOscillator(),g=c.createGain();
+    o.type='sawtooth'; o.frequency.setValueAtTime(f,c.currentTime);
+    o.frequency.exponentialRampToValueAtTime(f*1.6,c.currentTime+.3);
+    o.frequency.exponentialRampToValueAtTime(f*.4,c.currentTime+.9);
+    g.gain.setValueAtTime(0,c.currentTime); g.gain.linearRampToValueAtTime(.12,c.currentTime+.05);
+    g.gain.linearRampToValueAtTime(.18,c.currentTime+.3);
+    g.gain.exponentialRampToValueAtTime(.001,c.currentTime+1.1);
+    // Distortion via waveshaper
+    const ws=c.createWaveShaper();
+    const curve=new Float32Array(256);
+    for(let j=0;j<256;j++){ const x=j*2/256-1; curve[j]=x*(3+8)/(1+8*Math.abs(x)); }
+    ws.curve=curve;
+    o.connect(ws);ws.connect(g);g.connect(c.destination);
+    o.start(c.currentTime+i*.04);o.stop(c.currentTime+1.15);
+  });
+  // Ataque agudo do rugido
+  setTimeout(()=>{
+    const o=c.createOscillator(),g=c.createGain();
+    o.type='triangle'; o.frequency.setValueAtTime(320,c.currentTime);
+    o.frequency.exponentialRampToValueAtTime(80,c.currentTime+.6);
+    g.gain.setValueAtTime(.12,c.currentTime); g.gain.exponentialRampToValueAtTime(.001,c.currentTime+.65);
+    o.connect(g);g.connect(c.destination);o.start();o.stop(c.currentTime+.7);
+  },60);
+}
+
+/* ð° ALAVANCA DO SLOT â o som de puxar a alavanca da mÃ¡quina */
+function LEVER(){
+  if(muted)return; const c=getCtx();
+  // Click mecÃ¢nico
+  const buf=c.createBuffer(1,c.sampleRate*.025,c.sampleRate);
+  const d=buf.getChannelData(0);
+  for(let i=0;i<d.length;i++) d[i]=(Math.random()*2-1)*Math.exp(-i/(d.length*.2))*1.5;
+  const s=c.createBufferSource(),g=c.createGain(); s.buffer=buf; g.gain.value=.5;
+  s.connect(g);g.connect(c.destination);s.start();
+  // Mola descendo
+  setTimeout(()=>{
+    const o=c.createOscillator(),g2=c.createGain();
+    o.type='sine'; o.frequency.setValueAtTime(600,c.currentTime);
+    o.frequency.exponentialRampToValueAtTime(120,c.currentTime+.35);
+    g2.gain.setValueAtTime(.18,c.currentTime); g2.gain.exponentialRampToValueAtTime(.001,c.currentTime+.38);
+    o.connect(g2);g2.connect(c.destination);o.start();o.stop(c.currentTime+.4);
+  },30);
+  // Rolagem
+  setTimeout(()=>SPIN(),200);
+}
+
+/* ð SINO DE JACKPOT â campainha clÃ¡ssica das slots */
+function BELL(){
+  if(muted)return; const c=getCtx();
+  [1318,1760,2093].forEach((f,i)=>{
+    const o=c.createOscillator(),g=c.createGain();
+    o.type='sine'; o.frequency.value=f;
+    const T=c.currentTime+i*.18;
+    // Envelope de sino: ataque rÃ¡pido, decaimento longo
+    g.gain.setValueAtTime(0,T); g.gain.linearRampToValueAtTime(.3,T+.01);
+    g.gain.exponentialRampToValueAtTime(.001,T+1.2);
+    // HarmÃ´nica
+    const o2=c.createOscillator(),g2=c.createGain();
+    o2.type='sine'; o2.frequency.value=f*2.76; // harmÃ´nica de sino
+    g2.gain.setValueAtTime(.08,T); g2.gain.exponentialRampToValueAtTime(.001,T+.6);
+    o.connect(g);g.connect(c.destination);
+    o2.connect(g2);g2.connect(c.destination);
+    o.start(T);o.stop(T+1.25);o2.start(T);o2.stop(T+.65);
+  });
+}
+
+/* ð EMBARALHAR CARTAS â som de cartas sendo distribuÃ­das */
+function CARDS(){
+  if(muted)return; const c=getCtx();
+  for(let i=0;i<8;i++){
+    setTimeout(()=>{
+      const buf=c.createBuffer(1,c.sampleRate*.03,c.sampleRate);
+      const d=buf.getChannelData(0);
+      for(let j=0;j<d.length;j++) d[j]=(Math.random()*2-1)*Math.exp(-j/(d.length*.15));
+      const s=c.createBufferSource(),g=c.createGain();
+      // Filtro passa-alta para som papeloso
+      const f=c.createBiquadFilter(); f.type='highpass'; f.frequency.value=2000;
+      s.buffer=buf; g.gain.value=.22;
+      s.connect(f);f.connect(g);g.connect(c.destination);s.start();
+    },i*55+Math.random()*20);
+  }
+}
+
+/* ðº FANFARRA DE VITÃRIA â trompete sintÃ©tico estilo cassino */
+function FANFARE(){
+  if(muted)return; const c=getCtx();
+  // Melodia: Sol Sol Sol Mi-Sol (clÃ¡ssico de vitÃ³ria)
+  const melody=[[784,.0],[784,.22],[784,.44],[659,.7],[784,.9]];
+  melody.forEach(([f,t])=>{
+    const o=c.createOscillator(),g=c.createGain();
+    o.type='square'; o.frequency.value=f;
+    // Vibrato
+    const vib=c.createOscillator(),vibG=c.createGain();
+    vib.frequency.value=6; vibG.gain.value=8;
+    vib.connect(vibG);vibG.connect(o.frequency);
+    const T=c.currentTime+t;
+    g.gain.setValueAtTime(0,T); g.gain.linearRampToValueAtTime(.14,T+.02);
+    g.gain.setValueAtTime(.14,T+.16); g.gain.exponentialRampToValueAtTime(.001,T+.22);
+    o.connect(g);g.connect(c.destination);
+    o.start(T);vib.start(T);o.stop(T+.25);vib.stop(T+.25);
+  });
+  setTimeout(()=>{ BELL(); setTimeout(()=>COIN(14),400); },1100);
+}
+
+/* ð¨ SIRENE DE JACKPOT â o som que toca quando acerta o grande prÃªmio */
+function SIREN(){
+  if(muted)return; const c=getCtx();
+  for(let i=0;i<3;i++){
+    setTimeout(()=>{
+      const o=c.createOscillator(),g=c.createGain();
+      o.type='sawtooth';
+      o.frequency.setValueAtTime(880,c.currentTime);
+      o.frequency.linearRampToValueAtTime(1320,c.currentTime+.15);
+      o.frequency.linearRampToValueAtTime(880,c.currentTime+.3);
+      g.gain.setValueAtTime(.15,c.currentTime); g.gain.exponentialRampToValueAtTime(.001,c.currentTime+.35);
+      o.connect(g);g.connect(c.destination);o.start();o.stop(c.currentTime+.38);
+    },i*350);
+  }
+}
+
+/* ð² ROLAGEM DE DADOS â som de dados chacoalhando e caindo */
+function DICE(){
+  if(muted)return; const c=getCtx();
+  // Chacoalhar
+  for(let i=0;i<16;i++){
+    setTimeout(()=>{
+      const buf=c.createBuffer(1,c.sampleRate*.018,c.sampleRate);
+      const d=buf.getChannelData(0);
+      for(let j=0;j<d.length;j++) d[j]=(Math.random()*2-1)*Math.exp(-j/(d.length*.25));
+      const s=c.createBufferSource(),g=c.createGain();
+      g.gain.value=.08+(i/16)*.15;
+      s.buffer=buf;s.connect(g);g.connect(c.destination);s.start();
+    },i*38+Math.random()*15);
+  }
+  // Batida final do dado na mesa
+  setTimeout(()=>{
+    const buf=c.createBuffer(1,c.sampleRate*.06,c.sampleRate);
+    const d=buf.getChannelData(0);
+    for(let i=0;i<d.length;i++) d[i]=(Math.random()*2-1)*Math.exp(-i/(d.length*.1))*2;
+    const s=c.createBufferSource(),g=c.createGain();
+    const f=c.createBiquadFilter();f.type='lowpass';f.frequency.value=800;
+    g.gain.value=.6;s.buffer=buf;s.connect(f);f.connect(g);g.connect(c.destination);s.start();
+  },620);
+}
+
+/* ð¸ CÃDULAS CAINDO â som de notas de dinheiro (parÃ³dia do "ganhe dinheiro fÃ¡cil") */
+function MONEY_RAIN(){
+  if(muted)return; const c=getCtx();
+  for(let i=0;i<20;i++){
+    setTimeout(()=>{
+      const buf=c.createBuffer(1,c.sampleRate*.04,c.sampleRate);
+      const d=buf.getChannelData(0);
+      // Som de papel
+      for(let j=0;j<d.length;j++){
+        const t=j/c.sampleRate;
+        d[j]=(Math.random()*2-1)*0.15*Math.sin(2*Math.PI*2000*t)*Math.exp(-j/(d.length*.3));
+      }
+      const s=c.createBufferSource(),g=c.createGain();
+      const f=c.createBiquadFilter();f.type='bandpass';f.frequency.value=2400+Math.random()*800;
+      g.gain.value=.12;s.buffer=buf;s.connect(f);f.connect(g);g.connect(c.destination);s.start();
+    },i*80+Math.random()*40);
+  }
+  // Notas graves de cÃ©dula
+  setTimeout(()=>{
+    [261,329,392].forEach((f,i)=>{
+      const o=c.createOscillator(),g=c.createGain();
+      o.type='triangle'; o.frequency.value=f;
+      const T=c.currentTime+i*.12;
+      g.gain.setValueAtTime(.1,T);g.gain.exponentialRampToValueAtTime(.001,T+.4);
+      o.connect(g);g.connect(c.destination);o.start(T);o.stop(T+.42);
+    });
+  },400);
+}
+
+/* âââââââââââ NAVIGATION âââââââââââ */
+let obStep=0;
+const obData=[
+  {ico:'ð°',q:'Qual Ã© o seu maior vilÃ£o financeiro hoje?',sub:'Seja honesto â sÃ³ assim a MissÃ£o funciona.',
+   opts:[{e:'ð³',t:'DÃ­vidas no cartÃ£o ou cheque especial'},{e:'ð¬',t:'Gasto impulsivo â compro sem pensar'},{e:'ð',t:'NÃ£o tenho reserva de emergÃªncia'},{e:'ð°',t:'Perdi dinheiro em apostas'}]},
+  {ico:'ð',q:'Qual Ã© o seu maior sonho financeiro?',sub:'Esse sonho serÃ¡ o combustÃ­vel da sua jornada.',
+   opts:[{e:'ð ',t:'Comprar minha casa prÃ³pria'},{e:'âï¸',t:'Viajar com a famÃ­lia sem preocupaÃ§Ã£o'},{e:'ðï¸',t:'Me aposentar mais cedo'},{e:'ð§',t:'Parar de perder sono com dinheiro'}]},
+  {ico:'ðª',q:'Quanto pode comprometer por mÃªs para o futuro?',sub:'ConstÃ¢ncia vale mais que valor.',
+   opts:[{e:'â',t:'AtÃ© R$ 100 â comeÃ§o pequeno'},{e:'ðµ',t:'R$ 100 a R$ 300 por mÃªs'},{e:'ð°',t:'R$ 300 a R$ 1.000 por mÃªs'},{e:'ð',t:'Acima de R$ 1.000 por mÃªs'}]}
+];
+
+function goTo(id){
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  if(id==='home') setTimeout(()=>document.getElementById('xb').style.width='42%',300);
+  if(id==='celebracao'){SIREN();setTimeout(FANFARE,500);spawnConf();setTimeout(MONEY_RAIN,1200);}
+  if(id==='perfil'){DR();setTimeout(ROAR,800);}
+  if(id==='mapa'){SPIN();setTimeout(DICE,400);}
+  if(id==='escudo'){CARDS();setTimeout(initEscudo,80);}
+}
+
+function navTo(id){ C(); goTo(id); }
+
+function pickOb(el){
+  LEVER();
+  el.parentNode.querySelectorAll('.ob-opt').forEach(o=>o.classList.remove('sel'));
+  el.classList.add('sel');
+  setTimeout(()=>{
+    DING(); CARDS();
+    if(obStep<2){obStep++;updateOb();}else goTo('perfil');
+  },500);
+}
+
+function updateOb(){
+  const d=obData[obStep];
+  document.getElementById('obi').textContent=d.ico;
+  document.getElementById('obq').textContent=d.q;
+  docu-ent.getElementById('obs').textContent=d.sub;
+  document.getElementById('obo').innerHTML=d.opts.map(o=>`<div class="ob-opt" onclick="pickOb(this)"><span>${o.e}</span> ${o.t}</div>`).join('');
+  for(let i=0;i<3;i++){
+    const dot=document.getElementById('d'+(i+1));
+    dot.className='ob-dot';
+    if(i<obStep)dot.classList.add('done');
+    else if(i===obStep)dot.classList.add('active');
+  }
+}
+
+function completeMission(el,val){
+  const ck=el.querySelector('.mck'),tx=el.querySelector('.mtxt');
+  if(!ck.classList.contains('done')){
+    if(val>=100){ BELL(); setTimeout(()=>COIN(10),300); }
+    else { COIN(val>60?7:4); }
+    ck.classList.add('done'); ck.textContent='â'; tx.classList.add('done');
+    spawnBurst(el); showToast('ðª',`+${val} Bufunfas! Continue assim!`);
+  }
+}
+
+function ansCI(btn,type){
+  btn.closest('.ciq').querySelectorAll('.cbb').forEach(b=>b.classList.remove('sy','sn'));
+  btn.classList.add(type==='y'?'sy':'sn');
+  type==='y'?DING():BZ();
+  showToast(type==='y'?'â':'ðª',type==='y'?'+30 ðª Ãtima escolha!':'Tudo bem â prÃ³xima vai melhor!');
+}
+
+function showToast(ico,txt){
+  const t=document.getElementById('toast');
+  document.getElementById('ti').textContent=ico;
+  document.getElementById('tt').textContent=txt;
+  t.classList.add('show'); setTimeout(()=>t.classList.remove('show'),2600);
+}
+
+function spawnConf(){
+  const c=document.getElementById('confetti'); c.innerHTML='';
+  const cols=['#C8991A','#1A7A3C','#FFF','#F0C040','#25A352','#FFD700','#FF6B6B'];
+  for(let i=0;i<45;i++){
+    const el=document.createElement('div'); el.className='cp';
+    el.style.cssText=`left:${Math.random()*100}%;background:${cols[Math.floor(Math.random()*cols.length)]};width:${6+Math.random()*7}px;height:${6+Math.random()*7}px;border-radius:${Math.random()>.5?'50%':'2px'};animation-duration:${2+Math.random()*3}s;animation-delay:${Math.random()*1.5}s;`;
+    c.appendChild(el);
+  }
+}
+
+function spawnBurst(el){
+  const r=el.getBoundingClientRect(),dr=document.querySelector('.device').getBoundingClientRect();
+  for(let i=0;i<5;i++) setTimeout(()=>{
+    const coin=document.createElement('div'); coin.className='cburst'; coin.textContent='ðª';
+    coin.style.left=(r.left-dr.left+r.width/2+(Math.random()-.5)*44)+'px';
+    coin.style.top=(r.top-dr.top)+'px';
+    document.querySelector('.device').appendChild(coin);
+    setTimeout(()=>coin.remove(),750);
+  },i*70);
+}
+
+/* âââââââââââ SLOT MACHINE PARÃDIA âââââââââââ */
+const SLOT_SYMBOLS = ['ð°','ð','ð','ð¯','ð','ð ','âï¸','ð','ð','ðª'];
+const WINNING_COMBOS = ['ð°ð°ð°','ððð','ððð','ððð'];
+let slotSpinning = false;
+
+function spinSlot(){
+  if(slotSpinning)return;
+  slotSpinning=true;
+  getCtx(); SPIN();
+  const reels=['reel1','reel2','reel3'];
+  const stops=[
+    Math.floor(Math.random()*SLOT_SYMBOLS.length),
+    Math.floor(Math.random()*SLOT_SYMBOLS.length),
+    Math.floor(Math.random()*SLOT_SYMBOLS.length)
+  ];
+  // Force win 30% of the time (parÃ³dia: aqui as chances sÃ£o reais!)
+  if(Math.random()<0.3){ stops[1]=stops[0]; stops[2]=stops[0]; }
+
+  reels.forEach((id,i)=>{
+    const el=document.getElementById(id);
+    let ticks=0; const maxTicks=10+(i*4);
+    const interval=setInterval(()=>{
+      el.textContent=SLOT_SYMBOLS[Math.floor(Math.random()*SLOT_SYMBOLS.length)];
+      el.style.transform=`scale(${0.8+Math.random()*0.4})`;
+      ticks++;
+      if(ticks>=maxTicks){
+        clearInterval(interval);
+        el.textContent=SLOT_SYMBOLS[stops[i]];
+        el.style.transform='scale(1)';
+        if(i===2){
+          setTimeout(()=>{
+            const combo=reels.map(r=>document.getElementById(r).textContent).join('');
+            if(WINNING_COMBOS.includes(combo)||stops[0]===stops[1]&&stops[1]===stops[2]){
+              BELL(); setTimeout(SIREN,300); setTimeout(()=>COIN(15),600);
+              showToast('ð°','JACKPOT! VocÃ  sempre ganha aqui! ð');
+              reels.forEach(r=>{ document.getElementById(r).style.background='rgba(200,153,26,.4)'; setTimeout(()=>document.getElementById(r).style.background='rgba(255,255,255,.1)',2000); });
+            } else {
+              DING(); showToast('ðª','+10 Bufunfas â tente de novo!');
+            }
+            slotSpinning=false;
+          },200);
+        }
+      }
+    },80-(i*10));
+  });
+}
+
+document.querySelector('.device').addEventListener('click',()=>getCtx(),{once:true});
+document.querySelector('.device').addEventListener('touchstart',()=>getCtx(),{once:true});
+
+/* âââââââââââ CAÃA-FORTUNA (Anti-Bet Zone) âââââââââââ */
+const CF_CARDS = [
+  {
+    ico:'ðª', hint:'Vira e descobre o segredo!',
+    title:'R$ 100/mÃªs vira cruzeiro!',
+    val:'R$ 1.268', sub:'CDB 104% CDI Â· 12 meses Â· R$ 100/mÃªs',
+    tip:'ð¡ Basta aplicar R$ 100/mÃªs no CDB. Em 12 meses vocÃª banca um cruzeiro de 2 dias pela Costa Sul! (Costa do Sol Cruzeiros: ~R$ 1.190 por pessoa, cabine dupla)',
+    rwd:'+60 ðª',
+    spon:{ico:'ð¦', name:'Nubank', cta:'Abra sua Caixinha e invista automÃ¡tico â'}
+  },
+  {
+    ico:'â', hint:'Quanto custa o seu cafÃ©zinho diÃ¡rio?',
+    title:'O cafÃ© que virou iPhone',
+    val:'R$ 1.440', sub:'6 meses sem 1 cafÃ© de R$ 8/dia',
+    tip:'ð¡ R$ 8/dia Ã 30 dias = R$ 240/mÃªs. Em 6 meses = R$ 1.440. Isso compra um iPhone SE Ã  vista â ou parcela sem juros!',
+    rwd:'+50 ðª',
+    spon:{ico:'ð³', name:'Banco Inter', cta:'Cashback que devolve dinheiro de volta â'}
+  },
+  {
+    ico:'ð°', hint:'O que as Bets custam de verdade?',
+    title:'O custo real do Tigrinho',
+    val:'R$ 2.600/ano', sub:'apostando sÃ³ R$ 50 por semana',
+    tip:'ð¡ R$ 50/semana Ã 52 semanas = R$ 2.600. Isso equivale a uma moto Yamaha Pop 110i + R$ 300 sobrando. O TigrÃ£o devolve o que o Tigrinho roubou.',
+    rwd:'+80 ðª',
+    spon:{ico:'ðï¸', name:'Yamaha Motors', cta:'Simule a moto dos seus sonhos â'}
+  },
+  {
+    ico:'â¡', hint:'A magia que Einstein admirava...',
+    title:'Juros compostos: a 8Âª maravilha',
+    val:'R$ 40.968', sub:'R$ 200/mÃªs Â· 10 anos Â· 10% a.a.',
+    tip:'ð¡ Einstein disse: "Juros compostos sÃ£o a oitava maravilha do mundo. Quem entende, ganha. Quem nÃ£o entende, paga." Comece com qualquer valor.',
+    rwd:'+70 ðª',
+    spon:{ico:'ð', name:'XP Investimentos', cta:'Simule seu patrimÃ´nio em 10 anos â'}
+  },
+  {
+    ico:'ð', hint:'O vilÃ£o financeiro #1 do Brasil...',
+    title:'CartÃ£o rotativo: 400% a.a.',
+    val:'400% a.a.', sub:'a maior taxa de juros do planeta',
+    tip:'ð¡ R$ 1.000 no rotativo â R$ 5.000 em 1 ano. Pague a fatura INTEIRA. Sempre. Sem exceÃ§Ã£o. Esta Ã© a regra mais importante das finanÃ§as pessoais.',
+    rwd:'+90 ðª',
+    spon:{ico:'ð¦', name:'Sicoob', cta:'CrÃ©dito inteligente a partir de 1% a.m. â'}
+  },
+  {
+    ico:'ðï¸', hint:'Seu prÃ³ximo sonho estÃ¡ bem perto...',
+    title:'Argentina em 18 meses!',
+    val:'18 meses', sub:'poupando R$ 150/mÃªs = R$ 2.880 + juros',
+    tip:'ð¡ Pacote mochileiro Buenos Aires + Bariloche: ~R$ 2.700 por pessoa. Poupando R$ 150/mÃªs no CDB vocÃª chega lÃ¡ em 18 meses. Destino real, prazo real.',
+    rwd:'+100 ðª',
+    spon:{ico:'âï¸', name:'123milhas', cta:'Encontre passagens com cashback â'}
+  }
+];
+
+let cfCurrent=0, cfFlipped=false, cfClaimed=new Set();
+
+function initEscudo(){
+  cfCurrent=0; cfFlipped=false;
+  loadCFCard(0);
+  renderCFDots();
+  // Reset timer if needed
+  if(timerActive) stopTimer();
+  const disp=document.getElementById('timerDisp');
+  const btn=document.getElementById('timerBtn');
+  if(timerDone){ /* keep done state */ }
+  else { timerSecs=60; disp.textContent='60'; disp.classList.remove('done'); btn.className='timer-btn'; btn.textContent='ð¡ï¸ Segura o Impulso!'; }
+}
+
+function loadCFCard(i){
+  const d=CF_CARDS[i];
+  cfFlipped=false;
+  document.getElementById('card3d').classList.remove('flipped');
+  document.getElementById('cFrontIco').textContent=d.ico;
+  document.getElementById('cHint').textContent=d.hint;
+  document.getElementById('cTitle').textContent=d.title;
+  document.getElementById('cVal').textContent=d.val;
+  document.getElementById('cSubCalc').textContent=d.sub;
+  document.getElementById('cTip').textContent=d.tip;
+  document.getElementById('cRwd').textContent=d.rwd;
+  document.getElementById('sponIco').textContent=d.spon.ico;
+  document.getElementById('sponName').textContent=d.spon.name;
+  document.getElementById('sponCta').textContent=d.spon.cta;
+}
+
+function flipCard(){
+  if(cfFlipped)return;
+  cfFlipped=true;
+  CARDS();
+  document.getElementById('card3d').classList.add('flipped');
+  if(!cfClaimed.has(cfCurrent)){
+    cfClaimed.add(cfCurrent);
+    const pts=parseInt(CF_CARDS[cfCurrent].rwd);
+    setTimeout(()=>{ DING(); showToast('ð',CF_CARDS[cfCurrent].2wd+' pela carta virada!'); },700);
+  }
+  renderCFDots();
+}
+
+function nextCard(){
+  C();
+  if(cfCurrent<CF_CARDS.length-1){
+    cfCurrent++;
+    loadCFCard(cfCurrent);
+    renderCFDots();
+  } else {
+    WIN();
+    showToast('ð','Todas as cartas! +50 ðª bÃ´nus de Mestre!');
+    setTimeout(()=>goTo('celebracao'),1400);
+  }
+}
+
+function prevCard(){
+  C();
+  if(cfCurrent>0){ cfCurrent--; loadCFCard(cfCurrent); renderCFDots(); }
+}
+
+function renderCFDots(){
+  const c=document.getElementById('esdDots');
+  c.innerHTML=CF_CARDS.map((_,i)=>`<div class="esd-dot ${i<cfCurrent?'done':i===cfCurrent?'active':''}"></div>`).join('');
+  document.getElementById('esdPrev').style.opacity=cfCurrent===0?'0.3':'1';
+  const nb=document.getElementById('esdNext');
+  nb.textContent=cfCurrent===CF_CARDS.length-1?'Finalizar ð':'PrÃ³xima â¶';
+}
+
+/* ââ ANTI-IMPULSE TIMER ââ */
+let timerSecs=60, timerActive=false, timerInterval=null, timerDone=false;
+
+function startTimer(e){
+  if(e)e.preventDefault();
+  if(timerActive||timerDone)return;
+  timerActive=true;
+  const btn=document.getElementById('timerBtn');
+  btn.classList.add('holding');
+  btn.textContent='ðª Segurando... '+timerSecs+'s';
+  timerInterval=setInterval(()=>{
+    timerSecs--;
+    const disp=document.getElementById('timerDisp');
+    disp.textContent=timerSecs;
+    document.getElementById('timerBtn').textContent='ðª Segurando... '+timerSecs+'s';
+    if(timerSecs<=0){
+      clearInterval(timerInterval);
+      timerActive=false; timerDone=true;
+      disp.textContent='â'; disp.classList.add('done');
+      WIN(); setTimeout(()=>COIN(20),600);
+      const b=document.getElementById('timerBtn');
+      b.className='timer-btn done'; b.textContent='â MissÃ£o Cumprida! +200 ðª';
+      showToast('ð¡ï¸','+200 ðª VocÃª resistiu! O impulso passou!');
+    }
+  },1000);
+}
+
+function stopTimer(){
+  if(!timerActive)return;
+  timerActive=false;
+  clearInterval(timerInterval);
+  const btn=document.getElementById('timerBtn');
+  btn.classList.remove('holding');
+  if(timerSecs>0){ BZ(); btn.textContent='ð¡ï¸ Segura o Impulso! ('+timerSecs+'s)'; showToast('ðª','Quase! Continue segurando.'); }
+}
+
+</script>
+</body>
+</html>
